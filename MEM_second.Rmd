@@ -1,0 +1,376 @@
+---
+title: "MEM_second"
+author: "chenfan"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nycflights13)
+library(tidyverse)
+library(modelr)
+library(ggplot2)
+library(readxl)
+```
+
+## R Markdown
+
+# Question #1:BigBangTheory. (Attached Data: BigBangTheory)
+The Big Bang Theory, a situation comedy featuring Johnny Galecki, Jim Parsons, and Kaley
+Cuoco-Sweeting, is one of the most-watched programs on network television. The first two
+episodes for the 2011–2012 season premiered on September 22, 2011; the first episode
+attracted 14.1 million viewers and the second episode attracted 14.7 million viewers. The
+attached data file BigBangTheory shows the number of viewers in millions for the first 21
+episodes of the 2011–2012 season (the Big Bang theory website, April 17, 2012).
+a. Compute the minimum and the maximum number of viewers.
+b. Compute the mean, median, and mode.
+c. Compute the first and third quartiles.
+d. has viewership grown or declined over the 2011–2012 season? Discuss
+
+```{r }
+#getwd()
+data <- read.csv("data/BigBangTheory.csv", header = TRUE, sep = ",")
+data
+max(data$Viewers..millions.)
+min(data$Viewers..millions.)
+mean(data$Viewers..millions.)
+median(data$Viewers..millions.)
+as.numeric(names(which.max(table(data$Viewers..millions.))))
+quantile(data$Viewers, 0.25, na.rm = TRUE)
+quantile(data$Viewers, 0.75, na.rm = TRUE)
+
+model <- lm(Viewers..millions. ~ Air.Date, data = data)
+#coef(model)
+summary(model)
+#p<0.05  no contact
+```
+
+
+# Question #2: NBAPlayerPts. (Attached Data: NBAPlayerPts)
+CbSSports.com developed the Total Player Rating system to rate players in the National
+Basketball Association (NBA) based on various offensive and defensive statistics. The attached
+data file NBAPlayerPts shows the average number of points scored per game (PPG) for 50
+players with the highest ratings for a portion of the 2012–2013 NBA season (CbSSports.com
+website, February 25, 2013). Use classes starting at 10 and ending at 30 in increments of 2 for
+PPG in the following.
+a. Show the frequency distribution.
+b. Show the relative frequency distribution.
+c. Show the cumulative percent frequency distribution.
+d. Develop a histogram for the average number of points scored per game.
+e. Do the data appear to be skewed? Explain.
+f. What percentage of the players averaged at least 20 points per game?
+
+```{r}
+nba_players <- read.csv("data/NBAPlayerPts.csv", header = TRUE, sep = ",")
+nba_players
+
+# a. Show the frequency distribution.
+breaks <- seq(10, 30, by = 2)
+hist(nba_players$PPG, breaks = breaks)
+
+# b. Show the relative frequency distribution.
+hist(nba_players$PPG, breaks = breaks, freq = FALSE)
+
+# c. Show the cumulative percent frequency distribution.
+cumulative_freq <- cumsum(hist(nba_players$PPG, breaks = breaks, plot = FALSE)$counts) / sum(hist(nba_players$PPG, breaks = breaks, plot = FALSE)$counts)
+plot(cumulative_freq, type = "s")
+
+# d. Develop a histogram for the average number of points scored per game
+plot(nba_players$PPG, type="o")
+
+# e. Do the data appear to be skewed? Explain.
+hist(nba_players$PPG, main="PPG Distribution with Normal Curve", xlab="Points Per Game (PPG)", col="lightblue")
+curve(dnorm(x, mean=mean(nba_players$PPG), sd=sd(nba_players$PPG)), add=TRUE, col="red")
+
+# f. What percentage of the players averaged at least 20 points per game?
+count_players <- sum(nba_players$PPG >= 20)
+count_players
+```
+
+
+
+# Question #3: A researcher reports survey results by stating that the standard error of the mean is 20. The population standard deviation is 500.
+
+
+
+```{r}
+# a. How large was the sample used in this survey?
+sigma <- 500  
+SE <- 20      
+n <- (sigma / SE) ^ 2
+n
+
+# b. What is the probability that the point estimate was within ±25 of the population mean?
+mu <- 0 
+x <- 25 
+z <- (x - mu) / SE
+probability <- pnorm(z) - pnorm(-z)
+probability
+```
+
+# Question #4: Young Professional Magazine (Attached Data: Professional)
+Young Professional magazine was developed for a target audience of recent college graduates
+who are in their first 10 years in a business/professional career. In its two years of publication,
+the magazine has been fairly successful. Now the publisher is interested in expanding the
+magazine’s advertising base. Potential advertisers continually ask about the demographics and
+interests of subscribers to young Professionals. To collect this information, the magazine
+commissioned a survey to develop a profile of its subscribers. The survey results will be used to
+help the magazine choose articles of interest and provide advertisers with a profile of
+subscribers. As a new employee of the magazine, you have been asked to help analyze the
+survey results.
+Some of the survey questions follow:
+1. What is your age?
+2. Are you: Male_________ Female___________
+3. Do you plan to make any real estate purchases in the next two years?
+Yes______ No______
+4. What is the approximate total value of financial investments, exclusive of your
+home, owned by you or members of your household?
+5. How many stock/bond/mutual fund transactions have you made in the past year?
+6. Do you have broadband access to the Internet at home? Yes______ No______
+7. Please indicate your total household income last year. ___
+8. Do you have children? Yes______ No______
+The file entitled Professional contains the responses to these questions.
+Managerial Report:
+Prepare a managerial report summarizing the results of the survey. In addition to statistical
+summaries, discuss how the magazine might use these results to attract advertisers. You might
+also comment on how the survey results could be used by the magazine’s editors to identify
+topics that would be of interest to readers. Your report should address the following issues, but
+do not limit your analysis to just these areas.
+
+```{r}
+data <- read.csv("data/Professional.csv", header = TRUE, sep = ",")
+
+#a. Develop appropriate descriptive statistics to summarize the data.
+colnames(data) <- c("age", "gender", "real_estate","investments","num_trans","has_broadband", "income", "have_children")
+Professional <- data 
+Professional
+summary(Professional)
+
+#b. Develop 95% confidence intervals for the mean age and household income of subscribers.
+# 95%  age
+age_mean <- mean(Professional$age)
+age_sd <- sd(Professional$age)
+n <- length(Professional$age)
+age_ci <- t.test(Professional$age)$conf.int
+age_ci
+# 95% income
+income_mean <- mean(Professional$income)
+income_sd <- sd(Professional$income)
+income_ci <- t.test(Professional$income)$conf.int
+income_ci
+
+#c. Develop 95% confidence intervals for the proportion of subscribers who have broadband access at home and the proportion of subscribers who have children.
+# 95% has_broadband
+broadband_test <- prop.test(sum(Professional$has_broadband=="Yes"), length(Professional$has_broadband), conf.level = 0.95)
+print(broadband_test)
+
+# 95% have_children
+children_test <- prop.test(sum(Professional$have_children=="Yes"), length(Professional$have_children), conf.level = 0.95)
+print(children_test)
+
+#d. Would Young Professional be a good advertising outlet for online brokers? Justify your conclusion with statistical data.
+#yes real_estate>0.5
+real_estate <- sum(Professional$real_estate=="Yes")/length(Professional$real_estate)
+real_estate
+
+#e. Would this magazine be a good place to advertise for companies selling educational software and computer games for young children?
+# yes,have_children>0.5
+have_children <- sum(Professional$have_children=="Yes")/length(Professional$have_children)
+have_children
+
+#f. Comment on the types of articles you believe would be of interest to readers of Young Professional.
+
+# eg:children estate
+
+
+
+
+```
+
+
+# Question #5: Quality Associate, Inc. (Attached Data: Quality)
+
+```{r}
+Quality <- read.csv("data/Quality.csv", header = TRUE, sep = ",")
+# a. Conduct a hypothesis test for each sample at the .01 level of significance and determine what action, if any, should be taken. Provide the p-value for each test.
+alpha <- 0.01
+t_test_results <- lapply(Quality[, 1:4], function(x) t.test(x, mu = 12, var.equal = TRUE))
+p_values <- sapply(t_test_results, function(test) test$p.value)
+names(p_values) <- c("Sample 1", "Sample 2", "Sample 3", "Sample 4")
+p_values
+
+# b. compute the standard deviation for each of the four samples. does the assumption of .21 for the population standard deviation appear reasonable?
+# is reasonable
+sample_sds <- sapply(Quality[, 1:4], sd)
+names(sample_sds) <- c("Sample 1", "Sample 2", "Sample 3", "Sample 4")
+sample_sds
+
+# c. compute limits for the sample mean x around miu= 12 such that, as long as a new sample mean is within those limits, the process will be considered to be operating satisfactorily. if x exceeds the upper limit or if x is below the lower limit, corrective action will be taken. these limits are referred to as upper and lower control limits for quality control purposes.
+miu = 12
+sigma = 0.21
+n = 30
+alpht = 0.01
+zinterval <- function(miu,sigma,prob,n) {
+  return(c(miu + qnorm(prob) * sigma / sqrt(n), 
+           miu - qnorm(prob) * sigma / sqrt(n)))}
+zinterval(12,0.21,0.01,30)
+
+# d. discuss the implications of changing the level of significance to a larger value. what mistake or error could increase if the level of significance is increased?
+#Type I error will increase
+zinterval(12,0.21,0.05,30)
+#Type I error: The probability of incorrectly rejecting the true null hypothesis increases. This can lead to unnecessary corrective actions.
+#Type II error: The probability of incorrectly failing to reject a false null hypothesis is reduced because it is easier to reject the null hypothesis.
+```
+# Question #6: Vacation occupancy rates were expected to be up during March 2008 in Myrtle
+Beach, South Carolina (the sun news, February 29, 2008). Data in the file Occupancy (Attached
+file Occupancy) will allow you to replicate the findings presented in the newspaper. The data
+show units rented and not rented for a random sample of vacation properties during the first
+week of March 2007 and March 2008.
+
+```{r}
+Occupancy <- read.csv("data/Occupancy.csv", skip = 1)
+Occupancy
+#a. Estimate the proportion of units rented during the first week of March 2007 and the first week of March 2008.
+#sum(Occupancy$March.2007 %in% c("Yes"))/200
+#sum(Occupancy$March.2008 %in% c("Yes"))/150
+rented2007 <- sum(Occupancy$March.2007=="Yes")/length(Occupancy$March.2007)
+rented2007
+rented2008 <- sum(Occupancy$March.2008=="Yes")/150
+rented2008
+# b. Provide a 95% confidence interval for the difference in proportions.
+pa <- sum(Occupancy$March.2007 %in% c("Yes"))/200
+pb <- sum(Occupancy$March.2008 %in% c("Yes"))/150
+e <- qnorm(0.975) * sqrt(pa*(1-pa)/200 + pb*(1-pb)/150)
+c(pa-pb-e,pa-pb+e)
+# c. On the basis of your findings, does it appear March rental rates for 2008 will be up from those a year earlier?
+# -0.22031818 -0.01301516 doesn't include Zero,Impossible to judge
+```
+
+# Question #7: Air Force Training Program (data file: Training)
+```{r}
+Training <- read.csv("data/Training.csv", header = TRUE, sep = ",")
+Training
+#a. use appropriate descriptive statistics to summarize the training time data for each method.what similarities or differences do you observe from the sample data?
+skimr::skim(Training)
+summary(Training$Current)
+summary(Training$Proposed)
+#b. Comment on any difference between the population means for the two methods. Discuss your findings.
+Current <- mean(Training$Current)
+Current
+Proposed <- mean(Training$Proposed)
+Proposed
+#t.test(Training$Current,Training$Proposed)
+# Proposed is Bigger
+
+# c. compute the standard deviation and variance for each training method. conduct a hypothesis test about the equality of population variances for the two training methods. Discuss your findings.
+
+sdCurrent <- sd(Training$Current)
+varCurrent <- var(Training$Current)
+sdProposed <- sd(Training$Proposed)
+varProposed <- var(Training$Proposed)
+sdCurrent
+varCurrent
+sdProposed
+varProposed
+# 方差相等性检验（F-test）
+vartest <- var.test(Training$Current, Training$Proposed)
+vartest
+
+# d. what conclusion can you reach about any differences between the two methods? what is your recommendation? explain.
+if (Proposed < Current && vartest$p.value > 0.05) {
+  cat("The current method is preferred\n")
+} else {
+  cat("The proposed method is preferred\n")
+}
+#e. can you suggest other data or testing that might be desirable before making a final decision on the training program to be used in the future
+# such as student satisfaction
+```
+
+
+# Question #8: The Toyota Camry is one of the best-selling cars in North America. The cost of a previously owned Camry depends upon many factors, including the model year, mileage, and condition. To investigate the relationship between the car’s mileage and the sales price for a 2007 model year Camry, Attached data file Camry show the mileage and sale price for 19 sales (Pricehub website, February 24, 2012).
+
+```{r}
+Camry <- read.csv("data/Camry.csv", header = TRUE, sep = ",")
+Camry
+#a. Develop a scatter diagram with the car mileage on the horizontal axis and the price on the vertical axis.
+ggplot(Camry, aes(Miles..1000s., Price...1000s.)) + 
+  geom_point()
+# b. what does the scatter diagram developed in part (a) indicate about the relationship between the two variables?
+ggplot(Camry, aes(Miles..1000s., Price...1000s.)) + 
+  geom_smooth(method = 'loess',formula = 'y ~ x')
+# decrease
+# c. Develop the estimated regression equation that could be used to predict the price ($1000s) given the miles (1000s).
+lm_camry <- lm(Price...1000s.~ Miles..1000s., data = Camry)
+summary(lm_camry)
+
+# d. Test for a significant relationship at the .05 level of significance.
+
+#p-value = 0.0003475<0.05
+
+# e. Did the estimated regression equation provide a good fit? Explain.
+
+# R-squared:  0.5387 good fig
+
+# f. Provide an interpretation for the slope of the estimated regression equation.
+
+# estimated -0.05877  Miles increase Price decrease
+
+# g. Suppose that you are considering purchasing a previously owned 2007 Camry that has been driven 60,000 miles. Using the estimated regression equation developed in part (c), predict the price for this car. Is this the price you would offer the seller.
+
+# Price = 16.470 - 0.059 * miles  12942
+```
+
+# Question #9
+
+
+```{r}
+WE <- read_excel("data/WE.xlsx") %>% 
+  set_names("id","churn","happy_index","chg_hi","support","chg_supprt",
+            "priority","chg_priority","log_in_fre","chg_blog_fre","chg_vis","y_age","chg_interval")
+list_name = c("id","churn","happy_index","chg_hi","support","chg_supprt",
+            "priority","chg_priority","log_in_fre","chg_blog_fre","chg_vis","y_age","chg_interval")
+WE
+#a
+WE %>% 
+  select(-id) %>% 
+  group_by(churn) %>% 
+  group_modify(~{
+    .x %>% 
+      purrr::map_dfc(mean, na.rm = TRUE)
+  }) %>% 
+  ungroup()
+
+
+#b.
+compare_means <- function(var_name) {
+  group_0 <- WE[WE$churn == 0, var_name]
+  group_1 <- WE[WE$churn == 1, var_name]
+  result <- t.test(group_0, group_1)
+  return(result)
+}
+
+for(i in 3:length(list_name)){
+  print(list_name[i])
+  print(compare_means(list_name[i]))
+}
+
+
+#c. 
+
+model_q9 <- glm(churn ~., data = WE[, c("churn", list_name)], family = binomial())
+summary(model_q9)
+
+# d
+not_churned_data <- WE[WE$churn == 1, ]
+
+probabilities_q9 <- predict(model_q9, newdata = not_churned_data, type = "response")
+not_churned_data$Loss_probability <- probabilities_q9
+sorted_data <- not_churned_data[order(not_churned_data$Loss_probability), ]
+
+top_100_user_ids <- sorted_data$id[1:100]
+print(top_100_user_ids)
+```
+
